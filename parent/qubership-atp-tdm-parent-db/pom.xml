@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>qubership-atp-tdm-parent-java</artifactId>
+        <groupId>org.qubership.atp.tdm</groupId>
+        <version>${atp.service.version}</version>
+        <relativePath>../qubership-atp-tdm-parent-java/pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>qubership-atp-tdm-parent-db</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <jdbc.Url>jdbc:postgresql://localhost:5433/atp2_tdm</jdbc.Url>
+        <jdbc.Driver>org.postgresql.Driver</jdbc.Driver>
+        <jdbc.User>tdmadmin</jdbc.User>
+        <jdbc.Password>tdmadmin</jdbc.Password>
+        <jdbc.Dialect>org.hibernate.dialect.PostgreSQL9Dialect</jdbc.Dialect>
+
+        <drop.database.for.tests>false</drop.database.for.tests>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+    </dependencies>
+</project>
