@@ -67,7 +67,7 @@ public class BulkDataDropHandlerTest  extends AbstractTestDataTest {
             setSaveOccupiedData(false);
             setExecuteInParallel(false);
             setSendResult(false);
-            setRecipients("name@mail.ru");
+            setRecipients("example@example.com");
             setTableTitle(tableTitle);
         }};
         createTestDataTable(tableName);
@@ -100,7 +100,7 @@ public class BulkDataDropHandlerTest  extends AbstractTestDataTest {
             setSaveOccupiedData(false);
             setExecuteInParallel(false);
             setSendResult(false);
-            setRecipients("name@mail.ru");
+            setRecipients("example@example.com");
             setTableTitle(tableTitle);
         }};
         createTestDataTable(tableName);
@@ -133,7 +133,7 @@ public class BulkDataDropHandlerTest  extends AbstractTestDataTest {
             setSaveOccupiedData(false);
             setExecuteInParallel(false);
             setSendResult(false);
-            setRecipients("name@mail.ru");
+            setRecipients("example@example.com");
             setTableTitle(tableTitle);
         }};
         createTestDataTable(tableName);

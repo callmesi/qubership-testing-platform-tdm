@@ -796,7 +796,7 @@ public class StatisticsServiceTest extends AbstractTestDataTest {
         monitoring.setEnabled(true);
         monitoring.setCronExpression(cron);
         monitoring.setThreshold(10);
-        monitoring.setRecipients("test@mail.com");
+        monitoring.setRecipients("example@example.com");
         return monitoring;
     }
 
@@ -805,7 +805,7 @@ public class StatisticsServiceTest extends AbstractTestDataTest {
         usersMonitoring.setProjectId(projectId);
         usersMonitoring.setEnabled(true);
         usersMonitoring.setCronExpression(cron);
-        usersMonitoring.setRecipients("ATP-TDM@some-domain.com,TDM-ATP@some-domain.com");
+        usersMonitoring.setRecipients("example1@example.com,example2@example.com");
         usersMonitoring.setDaysCount(2);
         usersMonitoring.setHtmlReport(true);
         usersMonitoring.setCsvReport(true);
@@ -922,7 +922,7 @@ public class StatisticsServiceTest extends AbstractTestDataTest {
         availableDataMonitoring.setThreshold(10);
         availableDataMonitoring.setScheduled(true);
         availableDataMonitoring.setSchedule("0 0 9 ? * *");
-        availableDataMonitoring.setRecipients("ATP-tdm@some-domain.com");
+        availableDataMonitoring.setRecipients("example@example.com");
         return availableDataMonitoring;
     }
 
