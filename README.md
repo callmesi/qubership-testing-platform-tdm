@@ -62,9 +62,9 @@ Just run Main#main with args from step above
 
 # How to deploy tool
 
-1. Navigate to the builder job
-2. Successfully build the qstp-tdm project
-3. Navigate to the openshift
-4. Navigate to the "Applications" -> "Routes"
-5. Find a link to the tool with the specified project name
-6. Check the tool - open the url from the column "Hostname"
+1. Build snaphot (artifacts and docker image) of https://github.com/Netcracker/qubership-testing-platform-tdm in GitHub
+2. Clone repository to a place, available from your openshift/kubernetes where you need to deploy the tool to
+3. Navigate to <repository-root>/deployments/charts/atp-tdm folder
+4. Check/change configuration parameters in the ./values.yaml file according to your services installed
+5. Execute the command: helm install qstp-tdm
+6. After installation is completed, check deployment health
