@@ -12,7 +12,7 @@ This approach gives user one entry point for test data usage on different enviro
  ```sh 
  CREATE DATABASE qstptdm; 
  ```
-3. Create user tdmadmin
+3. Create user tdmadmin (User name and below password are example ones; please change them, and change service configuration variables TDM_DB_USER and TDM_DB_PASSWORD accordingly)
  ```sh 
  CREATE USER tdmadmin WITH PASSWORD 'tdmadmin';  
  ```
@@ -47,7 +47,7 @@ Just run Main#main with args from step above
 
 1.3. Port: 5433
 
-1.4. Create user and pass tdmadmin / tdmadmin
+1.4. Create user and pass tdmadmin / tdmadmin (User name and below password are example ones; please change them, and change service configuration variables TDM_DB_USER and TDM_DB_PASSWORD accordingly)
 
 1.5. Grant privileges on database to user
 
