@@ -5,12 +5,13 @@
     <parent>
         <artifactId>qubership-atp-tdm</artifactId>
         <groupId>org.qubership.atp.tdm</groupId>
-        <version>${atp.service.version}</version>
+        <version>1.2.3-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>qubership-atp-tdm-parent-java</artifactId>
+    <name>qubership-atp-tdm-parent-java</name>
     <packaging>pom</packaging>
 
     <properties>
@@ -29,12 +30,11 @@
         <model.mapper.version>3.2.0</model.mapper.version>
         <springfox.version>3.0.0</springfox.version>
 
-        <atp.crypt.version>0.0.19</atp.crypt.version>
-        <atp-export-import-lib.version>0.2.38</atp-export-import-lib.version>
+        <atp.crypt.version>0.0.20</atp.crypt.version>
+        <atp-export-import-lib.version>0.2.43</atp-export-import-lib.version>
         <atp.integration.spring.boot.starter.version>0.2.38</atp.integration.spring.boot.starter.version>
-        <atp.auth.spring.boot.starter.version>1.2.59</atp.auth.spring.boot.starter.version>
-        <atp.common.version>0.0.42</atp.common.version>
-        <atp.ei.lib.node>0.2.38</atp.ei.lib.node>
+        <atp.auth.spring.boot.starter.version>1.2.68</atp.auth.spring.boot.starter.version>
+        <atp.common.version>0.0.43</atp.common.version>
         <owasp.encoder.version>2.5.5.0</owasp.encoder.version>
     </properties>
 
@@ -187,7 +187,16 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
+            <dependency>
+                <groupId>org.qubership.atp.common</groupId>
+                <artifactId>qubership-atp-common-monitoring-undertow</artifactId>
+                <version>${atp.common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.qubership.atp.common</groupId>
+                <artifactId>qubership-atp-common-logging</artifactId>
+                <version>${atp.common.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.qubership.atp.common</groupId>
                 <artifactId>qubership-atp-common-lock-manager</artifactId>
@@ -205,20 +214,28 @@
                 <version>${atp-export-import-lib.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>commons-lang</artifactId>
                         <groupId>commons-lang</groupId>
+                        <artifactId>commons-lang</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>commons-logging</artifactId>
                         <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>jaxb-api</artifactId>
                         <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>commons-csv</artifactId>
                         <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-csv</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-collections</groupId>
+                        <artifactId>commons-collections</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
