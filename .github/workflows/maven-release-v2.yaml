@@ -63,7 +63,38 @@ permissions:
 jobs:
   dry-run-build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: centos/postgresql-96-centos7:9.6
+        ports:
+          - 5432:5432
+        env:
+          POSTGRESQL_USER: tdmadmin
+          POSTGRESQL_PASSWORD: tdmadmin
+          POSTGRESQL_DATABASE: atp2_tdm
+          POSTGRESQL_ADMIN_PASSWORD: postgres
+        options: >-
+          --health-cmd="pg_isready -U postgres -d atp2_tdm"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     steps:
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -U postgres -d atp2_tdm; then
+              echo "Postgres is ready"
+              break
+            fi
+            echo "Waiting for Postgres..."
+            sleep 5
+          done
+
+      - name: Create uuid-ossp extension
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+
       - name: "Build and Publish current SNAPSHOT (dry run)"
         uses: netcracker/qubership-workflow-hub/actions/maven-release@v1.0.1
         with:
@@ -86,7 +117,37 @@ jobs:
     outputs:
       release-version: ${{ steps.build-and-publish.outputs.release-version }}
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: centos/postgresql-96-centos7:9.6
+        ports:
+          - 5432:5432
+        env:
+          POSTGRESQL_USER: tdmadmin
+          POSTGRESQL_PASSWORD: tdmadmin
+          POSTGRESQL_DATABASE: atp2_tdm
+          POSTGRESQL_ADMIN_PASSWORD: postgres
+        options: >-
+          --health-cmd="pg_isready -U postgres -d atp2_tdm"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     steps:
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -U postgres -d atp2_tdm; then
+              echo "Postgres is ready"
+              break
+            fi
+            echo "Waiting for Postgres..."
+            sleep 5
+          done
+      - name: Create uuid-ossp extension
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+
       - name: "Prepare app token"
         uses: actions/create-github-app-token@v1
         id: app-token

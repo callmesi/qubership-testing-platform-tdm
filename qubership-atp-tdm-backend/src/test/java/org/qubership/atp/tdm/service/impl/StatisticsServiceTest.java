@@ -700,7 +700,7 @@ public class StatisticsServiceTest extends AbstractTestDataTest {
     public void statisticsService_checkNextScheduledRun_returnsNextScheduledRun() throws ParseException {
         final String cronExpression = "0 0 6 * * ?";
         final String pattern = "E MMM dd HH:mm:ss z yyyy";
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
         LocalDateTime expectedDateTime = LocalDate.now().atTime(6, 0);
         if (LocalDateTime.now().isAfter(expectedDateTime)) {
             expectedDateTime = expectedDateTime.plusDays(1);

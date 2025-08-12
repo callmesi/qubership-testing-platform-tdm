@@ -6,7 +6,7 @@
 
     <groupId>org.qubership.atp.tdm</groupId>
     <artifactId>qubership-atp-tdm</artifactId>
-    <version>1.2.3-SNAPSHOT</version>
+    <version>1.2.88-SNAPSHOT</version>
 
     <modules>
         <module>qubership-atp-tdm-rest-openapi-specifications</module>

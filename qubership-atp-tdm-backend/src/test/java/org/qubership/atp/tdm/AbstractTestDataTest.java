@@ -244,6 +244,7 @@ public abstract class AbstractTestDataTest extends AbstractTest {
     }
 
     protected TestDataTable createTestDataTable(String tableName) {
+        deleteTestDataTableIfExists(tableName);
         return testDataTableRepository.saveTestData(tableName, false, buildTestDataTable());
     }
 
@@ -255,6 +256,7 @@ public abstract class AbstractTestDataTest extends AbstractTest {
     }
 
     protected TestDataTable createSmallTestDataTable(String tableName) {
+        deleteTestDataTableIfExists(tableName);
         return testDataTableRepository.saveTestData(tableName, false, buildSmallTestDataTable());
     }
 

@@ -6,13 +6,13 @@ The concept of test data management assumes usage of TDM tool as one centralized
 
 This approach gives user one entry point for test data usage on different environment, new scripts for test data collection or update can be performed in few clicks on different servers.
 
-# How to prepare local DB before application running.
+## How to prepare local DB before application running.
 1. Download and install [PostgreSQL](https://www.postgresql.org/download/)
 2. Create database
  ```sh 
  CREATE DATABASE qstptdm; 
  ```
-3. Create user tdmadmin (User name and below password are example ones; please change them, and change service configuration variables TDM_DB_USER and TDM_DB_PASSWORD accordingly)
+3. Create user tdmadmin (Username and below password are example ones; please change them, and change service configuration variables TDM_DB_USER and TDM_DB_PASSWORD accordingly)
  ```sh 
  CREATE USER tdmadmin WITH PASSWORD 'tdmadmin';  
  ```
@@ -20,11 +20,15 @@ This approach gives user one entry point for test data usage on different enviro
  ```sh 
  GRANT ALL PRIVILEGES ON DATABASE "qstptdm" to tdmadmin;
  ``` 
-5. To setup local copy of database you need to build project by maven "clean" and "package".
+5. Install extension in the database
+```sql
+ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+```
+6. To setup local copy of database you need to build project by maven "clean" and "package".
    Please notice that Maven must be configured with `Profiles -> migration-on-build-pg` property or it WILL NOT setup basic DB strusture. If you had already set up DB structure, don't use this property.
    Basic structure of DB (constraints and tables) is scripted in migration module (src/main/scripts/install.xml)
 
-# How to start Backend
+## How to start Backend
 
 1. Main class `org.qubership.atp.tdm.Main`
 2. VM options (contains links, can be edited in parent-db pom.xml):
@@ -36,31 +40,26 @@ This approach gives user one entry point for test data usage on different enviro
    `
 3. Select "Working directory" `$MODULE_WORKING_DIRS$`
 
-Just run Main#main with args from step above
+4. Just run Main#main with args from step above
 
-# How to start Tests with PostgreSql
+## How to configure local PostgreSql to run tests
 1. PostgreSQL installed local
+2. Download and install [PostgreSQL](https://www.postgresql.org/download/).
+3. Create database: qstptdmtest (This is example name; please change database name according your business needs)
+4. Port: 5432
+5. Create user and pass tdmadmin / tdmadmin (User name and below password are example ones; please change them, and change service configuration variables TDM_DB_USER and TDM_DB_PASSWORD accordingly)
+6. Grant privileges on database to user
+7. Install extension uuid-ossp (see above)
 
-1.2. Download and install [PostgreSQL](https://www.postgresql.org/download/).
+## How to start Tests with Docker
+1. Docker installed local
+2. VM options: -DLOCAL_DOCKER_START=true
 
-1.2. Create database: qstptdmtest
+## How to run backend
 
-1.3. Port: 5433
+- Build project: build by maven "clean" and "package", run as backend on port 8080.
 
-1.4. Create user and pass tdmadmin / tdmadmin (User name and below password are example ones; please change them, and change service configuration variables TDM_DB_USER and TDM_DB_PASSWORD accordingly)
-
-1.5. Grant privileges on database to user
-
-# How to start Tests with Docker
-2. Docker installed local
-
-1.2. VM options: -DLOCAL_DOCKER_START=true
-
-# How to run backend
-
-1. Build project: build by maven "clean" and "package", run as backend on port 8080.
-
-# How to deploy tool
+## How to deploy tool
 
 1. Build snaphot (artifacts and docker image) of https://github.com/Netcracker/qubership-testing-platform-tdm in GitHub
 2. Clone repository to a place, available from your openshift/kubernetes where you need to deploy the tool to

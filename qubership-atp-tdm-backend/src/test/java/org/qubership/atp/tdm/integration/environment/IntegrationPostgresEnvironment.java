@@ -26,7 +26,7 @@ import java.util.Optional;
 public class IntegrationPostgresEnvironment extends ExternalResource {
 
     private static IntegrationPostgresEnvironment instance;
-    private String postgresJdbcUrl = "jdbc:postgresql://localhost:5433/atp2_tdm";
+    private String postgresJdbcUrl = "jdbc:postgresql://localhost:5432/atp2_tdm";
     private ForEachPostgresqlContainer postgresContainer;
 
     private IntegrationPostgresEnvironment() {
