@@ -22,7 +22,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import org.junit.Ignore;
 import org.qubership.atp.tdm.AbstractTestDataTest;
 import org.qubership.atp.tdm.ExcelRowsReader;
 import org.qubership.atp.tdm.env.configurator.exceptions.internal.TdmEnvDbConnectionException;
@@ -50,13 +49,12 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Ignore
 public class TestDataServiceTest extends AbstractTestDataTest {
 
-    private static final String TEST_DATASET = "link-to-ds";
-    private static final String TEST_DATASET_SMALL = "link-to-ds";
-    private static final String TABLE_TO_EXCEL_FILE = "link-to-ds";
-    private static final String TABLE_TO_CSV_FILE = "link-to-ds";
+    private static final String TEST_DATASET = "DataSet.xlsx";
+    private static final String TEST_DATASET_SMALL = "DataSetSmall.xlsx";
+    private static final String TABLE_TO_EXCEL_FILE = "TableToExcel.xlsx";
+    private static final String TABLE_TO_CSV_FILE = "TableToCsv.csv";
     private static final int CREATED_WHEN_COLUMN_INDEX = 3;
     private static final int OCCUPIED_DATE_COLUMN_INDEX = 1;
 

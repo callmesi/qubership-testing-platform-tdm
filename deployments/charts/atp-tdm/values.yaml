@@ -1,0 +1,201 @@
+PAAS_PLATFORM: "KUBERNETES"
+ATP_NET: ""
+# Placeholder for Public key for ENCRYPT
+ATP_CRYPTO_KEY: ""
+# Placeholder for Private key for ENCRYPT
+ATP_CRYPTO_PRIVATE_KEY: ""
+ATP_INTERNAL_GATEWAY_ENABLED: "false"
+# Api url for routing by eureka
+ATP_SERVICE_PATH: "/api/atp-tdm/v1/**"
+# Register to public gateway in eureka
+ATP_SERVICE_PUBLIC: "true"
+# CPU core limit
+CPU_LIMIT: "0.5"
+# CPU core request
+CPU_REQUEST: "0.05"
+# Which docker image should be used to deploy
+DOCKER_TAG: "artifactory.some-domain.com/link-to-image"
+# Name mongo grid DB
+EI_GRIDFS_DB: ""
+# Password mongo grid DB
+EI_GRIDFS_PASSWORD: ""
+# User mongo grid DB
+EI_GRIDFS_USER: ""
+# Encyption option. One of - dev (default, encrypt inside app); - secrets (encrypt keys in Openshift secrets); - vault (encrypt keys in Openshift secrets)
+ENCRYPT: "dev"
+ENVIRONMENTS_CACHE_DURATIONS: "15"
+ENVIRONMENTS_SPRING_CACHE_TYPE: "GENERIC"
+# Eureka client enabled
+EUREKA_CLIENT_ENABLED: "false"
+FEIGN_ATP_CATALOGUE_NAME: "ATP-CATALOGUE"
+FEIGN_ATP_CATALOGUE_ROUTE: "api/atp-catalogue/v1"
+FEIGN_ATP_CATALOGUE_URL: '' # TO_BE_REPLACED
+FEIGN_ATP_EI_NAME: "ATP-EXPORT-IMPORT"
+FEIGN_ATP_EI_ROUTE: "api/atp-export-import/v1"
+FEIGN_ATP_EI_URL: '' # TO_BE_REPLACED
+FEIGN_ATP_ENVIRONMENTS_NAME: "ATP-ENVIRONMENTS"
+FEIGN_ATP_ENVIRONMENTS_ROUTE: "api/atp-environments/v1"
+FEIGN_ATP_ENVIRONMENTS_URL: '' # TO_BE_REPLACED
+FEIGN_ATP_USERS_NAME: "ATP-USERS-BACKEND"
+FEIGN_ATP_USERS_ROUTE: "api/atp-users-backend/v1"
+FEIGN_ATP_USERS_URL: '' # TO_BE_REPLACED
+FEIGN_ATP_INTERNAL_GATEWAY_NAME: "atp-internal-gateway"
+FEIGN_CONNECT_TIMEOUT: "300000"
+FEIGN_READ_TIMEOUT: "300000"
+# Sender e-mail address
+FROM_EMAIL_ADDRESS: "ATP-TDM-Tool@some-domain.com"
+# Host of graylog
+GRAYLOG_HOST: "tcp:ta-graylog.some-domain.com"
+# This option turns on or off logging in graylog
+GRAYLOG_ON: "true"
+# Port of graylog
+GRAYLOG_PORT: "12201"
+PROFILER_ENABLED: "false"
+# host of profiler collector
+REMOTE_DUMP_HOST: "esc-collector-service.profiler.svc"
+# port of profiler collector
+REMOTE_DUMP_PORT: "1710"
+# Self-pointing external URL
+IDENTITY_PROVIDER_URL: "http://atp-tdm-devci.dev-atp-cloud.some-domain.com"
+JMX_ENABLE: "true"
+JMX_PORT: "3000"
+JMX_RMI_PORT: "3001"
+# This option turns on or off kafka enable
+KAFKA_ENABLE: "true"
+KAFKA_PROJECT_EVENT_CONSUMER_TOPIC_NAME: ""
+KAFKA_SERVERS: "kafka:9092"
+KAFKA_SERVICE_ENTITIES_TOPIC: ""
+KAFKA_SERVICE_ENTITIES_TOPIC_PARTITIONS: "1"
+KAFKA_SERVICE_ENTITIES_TOPIC_REPLICATION_FACTOR: ""
+SERVICE_ENTITIES_MIGRATION_ENABLED: 'true'
+# Audit Logging topic
+AUDIT_LOGGING_ENABLE: "false"
+AUDIT_LOGGING_TOPIC_NAME: ""
+KAFKA_REPORTING_SERVERS: "kafka:9092"
+AUDIT_LOGGING_TOPIC_PARTITIONS: "1"
+AUDIT_LOGGING_TOPIC_REPLICAS: ""
+# Url atp-keycloak with auth
+KEYCLOAK_AUTH_URL: "https://atp-keycloak-devci.dev-atp-cloud.some-domain.com/auth"
+# Keycloak client name
+KEYCLOAK_CLIENT_NAME: "atp-tdm"
+# Keycloak enabled
+KEYCLOAK_ENABLED: "false"
+# Keycloak realm
+KEYCLOAK_REALM: "atp2"
+# Keycloak secret
+KEYCLOAK_SECRET: "10870611-a4a4-4ad1-acaa-b587f54ead40"
+# locale resolver
+LOCALE_RESOLVER: "en"
+# Label for project.
+LABEL: '' # TO_BE_REPLACED
+# Mail sender endpoint
+MAIL_SENDER_ENDPOINT: "/api/v1/mail-sender/mail/send"
+# Mail sender port
+MAIL_SENDER_PORT: "8080"
+# Mail sender enable
+MAIL_SENDER_ENABLE: "true"
+# Mail sender URL
+MAIL_SENDER_URL: "http://qaapp486.some-domain.com"
+MAX_FILE_SIZE: "100MB"
+MAX_REQUEST_SIZE: "100MB"
+# Limits memory usage of service.
+MAX_RAM: "1024m"
+# Memory limit
+MEMORY_LIMIT: "1024Mi"
+# Memory request
+MEMORY_REQUEST: "512Mi"
+# OpenShift project.
+# Variable 'OPENSHIFT_PROJECT' was never used
+# Host of db
+PG_DB_ADDR: "pg-common.postgrescluster.svc"
+# Port of db
+PG_DB_PORT: "5432"
+# Rest end point for projects
+PROJECT_INFO_ENDPOINT: "/api/v1/users/projects"
+# Security Context properties
+# enabled is a flag to enable Security Context
+SECURITY_CONTEXT_ENABLED: false
+# runAsUser is the user ID used to run the container
+podSecurityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+containerSecurityContext: { }
+# Deployment Config/Service name.
+SERVICE_NAME: "atp-tdm"
+# Deployment Config/Service type.
+SERVICE_PORT_TYPE: "NodePort"
+# Host of Eureka server
+SERVICE_REGISTRY_URL: "http://atp-registry-service-devci.dev-atp-cloud.some-domain.com/eureka"
+# Set to ATP2 to enable Prometheus scrapping
+SERVICE_TYPE: "ATP2"
+# Spring profile for security
+SPRING_PROFILES: "default"
+# Name of db
+TDM_DB: ""
+# Password for itf db
+TDM_DB_PASSWORD: ""
+# User for db
+TDM_DB_USER: ""
+VAULT_ENABLE: "false"
+VAULT_NAMESPACE: ''
+VAULT_ROLE_ID: ''
+VAULT_SECRET_ID: ''
+VAULT_URI: ''
+ZIPKIN_ENABLE: "false"
+ZIPKIN_PROBABILITY: "1.0"
+ZIPKIN_URL: "http://zipkin.zipkin.svc:9411"
+# insecure Edge Termination Policy.
+TERMINATION_POLICY: "Redirect"
+# Liquibase properties
+LIQUIBASE_ENABLED: "false"
+LIQUIBASE_LAUNCH_ENABLED: "true"
+GRIDFS_DB_ADDR: "gridfs.mongocluster.svc"
+GRIDFS_DB_PORT: "27017"
+# Consul
+CONSUL_PREFIX: "devci"
+CONSUL_ENABLED: 'false'
+CONSUL_HEALTH_CHECK_ENABLED: 'false'
+CONSUL_URL: ""
+CONSUL_PORT: 8500
+CONSUL_TOKEN: ""
+LOCK_DEFAULT_DURATION_SEC: "60"
+LOCK_RETRY_TIMEOUT_SEC: "10800"
+LOCK_RETRY_PACE_SEC: "3"
+ATP_HTTP_LOGGING: 'true'
+ATP_HTTP_LOGGING_HEADERS: 'true'
+ATP_HTTP_LOGGING_HEADERS_IGNORE: "Authorization"
+ATP_HTTP_LOGGING_URI_IGNORE: "/rest/deployment/readiness /rest/deployment/liveness /api/tdm/download/csv"
+LOG_LEVEL: "INFO"
+FEIGN_ATP_MAILSENDER_URL: ""
+FEIGN_ATP_MAILSENDER_NAME: "ATP-MAIL-SENDER"
+FEIGN_ATP_MAILSENDER_ROUTE: "api/atp-mail-sender/v1"
+FEIGN_ATP_HIGHCHARTS_NAME: "ATP-CHARTS"
+FEIGN_ATP_HIGHCHARTS_ROUTE: "api/atp-charts/v1"
+FEIGN_ATP_HIGHCHARTS_URL: ""
+NODES_COUNT: "1"
+KAFKA_SYSTEMS_EVENT_CONSUMER_TOPIC_NAME: ""
+KAFKA_ENVIRONMENTS_EVENT_CONSUMER_TOPIC_NAME: ""
+# Swagger
+SWAGGER_ENABLED: 'false'
+EXTERNAL_QUERY_DEFAULT_TIMEOUT: "1800"
+EXTERNAL_QUERY_MAX_TIMEOUT: "3600"
+#Enabling installation of external link for service
+EXTERNAL_LINK_ENABLED: false
+nodeSelector: { }
+#  kubernetes.io/hostname: worker1-atpkub
+ADDITIONAL_JAVA_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+HEAPDUMP_ENABLED: false
+#Example for CMD: "extraEnvs": [
+#    {
+#      "name": "DISABLE_INSTALL_DEMO_CONFIG",
+#      "value": "true"
+#    },
+#    {
+#      "name": "DISABLE_SECURITY_PLUGIN",
+#      "value": "true"
+#    }
+#  ]
+extraEnvs: [ ]
+keepHookLogs: false
+HELPER_IMAGE: "artifactory.some-domain.com/link-to-image"
+USE_W_HELM: "true"

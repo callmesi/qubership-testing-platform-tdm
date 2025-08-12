@@ -21,7 +21,7 @@ public class TestDataQueries {
     public static final String OCCUPIED_CONDITION = "WHERE \"SELECTED\" = ?";
 
     public static final String GET_OCCUPIED_STATISTICS_GROUP_BY =
-            "SELECT NEW table.model.org.qubership.atp.tdm.TestDataOccupyReportGroupBy"
+            "SELECT NEW org.qubership.atp.tdm.model.table.TestDataOccupyReportGroupBy"
             + "(c.occupiedBy, c.occupiedDate, c.tableName, COUNT(*)) "
             + "FROM TestDataOccupyStatistic as c "
             + "WHERE c.projectId = :projectId "

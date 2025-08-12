@@ -230,10 +230,6 @@
                         <artifactId>commons-csv</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>commons-collections</groupId>
-                        <artifactId>commons-collections</artifactId>
-                    </exclusion>
-                    <exclusion>
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
                     </exclusion>
@@ -316,11 +312,11 @@
                 <artifactId>modelmapper</artifactId>
                 <version>${model.mapper.version}</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.qubership.atp.environments</groupId>-->
-<!--                <artifactId>env-rest-openapi-specifications</artifactId>-->
-<!--                <version>1.5.85</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>org.qubership.atp.environments</groupId>
+                <artifactId>env-rest-openapi-specifications</artifactId>
+                <version>1.5.92</version>
+            </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib</artifactId>
