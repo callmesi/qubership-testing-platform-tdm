@@ -10,8 +10,6 @@ ENV JDBC_URL=jdbc:postgresql://localhost:5432/atptdm
 
 WORKDIR $HOME_EX
 
-# Unchanged copy - start
-
 RUN echo "https://dl-cdn.alpinelinux.org/alpine/v3.21/community/" >/etc/apk/repositories && \
     echo "https://dl-cdn.alpinelinux.org/alpine/v3.21/main/" >>/etc/apk/repositories && \
     apk add --update --no-cache --no-check-certificate \
@@ -49,13 +47,9 @@ RUN adduser -D -H -h /atp -s /bin/bash -u 1007 atp && \
     echo "${JAVA_HOME}/bin/java \$@" >/usr/bin/java && \
     chmod a+x /usr/bin/java
 
-# Unchanged copy - end
-
-COPY --chmod=775 dist/atp /atp/
-COPY --chown=atp:root build/atp-tdm $HOME_EX/
-
-RUN apk add --update --no-cache fontconfig ttf-dejavu && \
-    rm -rf /var/cache/apk/* && \
+RUN unzip /tmp/qubership-atp-tdm-distribution-*.zip -d $HOME_EX/ && \
+    cp -r dist/atp /atp/ && chmod -R 775 /atp/ && \
+    chown -R atp:root $HOME_EX/ && \
     find $HOME_EX -type f -name '*.sh' -exec chmod a+x {} + && \
     find $HOME_EX -type d -exec chmod 777 {} \;
 
