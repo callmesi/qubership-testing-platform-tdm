@@ -48,7 +48,7 @@ on:
       mvn-args:
         description: 'Additional maven arguments to pass (e.g. -DskipTests=true -Dmaven.javadoc.skip=true)'
         required: false
-        default: '-DskipTests=true'
+        default: ''
         type: string
       build-docker:
         description: 'Build Docker image'
@@ -93,7 +93,7 @@ jobs:
       - name: Create uuid-ossp extension
         run: |
           sudo apt-get update && sudo apt-get install -y postgresql-client
-          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
 
       - name: "Build and Publish current SNAPSHOT (dry run)"
         uses: netcracker/qubership-workflow-hub/actions/maven-release@v1.0.1
@@ -146,7 +146,7 @@ jobs:
       - name: Create uuid-ossp extension
         run: |
           sudo apt-get update && sudo apt-get install -y postgresql-client
-          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
 
       - name: "Prepare app token"
         uses: actions/create-github-app-token@v1

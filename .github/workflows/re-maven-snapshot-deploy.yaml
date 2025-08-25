@@ -131,7 +131,7 @@ jobs:
       - name: Create uuid-ossp extension
         run: |
           sudo apt-get update && sudo apt-get install -y postgresql-client
-          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+          PGPASSWORD=postgres psql -h localhost -U postgres -d atp2_tdm -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
 
       - name: Cache local Maven repository
         uses: actions/cache@v4
