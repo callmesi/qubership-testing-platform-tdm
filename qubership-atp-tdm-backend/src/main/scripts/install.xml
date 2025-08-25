@@ -8,6 +8,11 @@
 
 
     <changeSet id="CREATE_TABLE_TEST_DATA_TABLE_CATALOG" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_TABLE_CATALOG"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_TABLE_CATALOG">
             <column name="PROJECT_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -31,6 +36,11 @@
     </changeSet>
     
     <changeSet id="CREATE_TABLE_TEST_DATA_TABLE_COLUMN" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_TABLE_COLUMN"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_TABLE_COLUMN">
             <column name="TABLE_NAME" type="VARCHAR">
                 <constraints nullable="false"/>
@@ -51,16 +61,34 @@
     </changeSet>
     
     <changeSet id="U_TEST_DATA_TABLE_CATALOG(TABLE_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_TABLE_CATALOG(TABLE_NAME)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_TABLE_CATALOG" columnNames="TABLE_NAME"
                              constraintName="U_TEST_DATA_TABLE_CATALOG(TABLE_NAME)"/>
     </changeSet>
     
     <changeSet id="U_TEST_DATA_TABLE_COLUMN(TABLE_NAME, COLUMN_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_TABLE_COLUMN(TABLE_NAME, COLUMN_NAME)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_TABLE_COLUMN" columnNames="TABLE_NAME, COLUMN_NAME"
                              constraintName="U_TEST_DATA_TABLE_COLUMN(TABLE_NAME, COLUMN_NAME)"/>
     </changeSet>
     
     <changeSet id="TEST_DATA_TABLE_COLUMN(TABLE_NAME)-FK_TEST_DATA_TABLE_CATALOG(TABLE_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.table_constraints
+                WHERE lower(constraint_type) = 'foreign key'
+                  AND lower(table_name) = 'test_data_table_column'
+                  AND constraint_name = 'TEST_DATA_TABLE_COLUMN(TABLE_NAME)-FK_TEST_DATA_TABLE_CATALOG(TABLE_NAME)';
+            </sqlCheck>
+        </preConditions>
         <addForeignKeyConstraint baseTableName="TEST_DATA_TABLE_COLUMN" baseColumnNames="TABLE_NAME"
                                  referencedTableName="TEST_DATA_TABLE_CATALOG"
                                  referencedColumnNames="TABLE_NAME"
@@ -69,6 +97,11 @@
     </changeSet>
     
     <changeSet id="CREATE_TABLE_TEST_DATA_CLEANUP_CONFIG" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_CLEANUP_CONFIG"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_CLEANUP_CONFIG">
             <column name="ID" type="uuid">
                 <constraints nullable="false"/>
@@ -92,11 +125,21 @@
     </changeSet>
     
     <changeSet id="U_CREATE_TABLE_TEST_DATA_CLEANUP_CONFIG(TABLE_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_CREATE_TABLE_TEST_DATA_CLEANUP_CONFIG(ID)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_CLEANUP_CONFIG" columnNames="ID"
                              constraintName="U_CREATE_TABLE_TEST_DATA_CLEANUP_CONFIG(ID)"/>
     </changeSet>
     
     <changeSet id="CREATE_TABLE_TEST_DATA_REFRESH_CONFIG" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_REFRESH_CONFIG"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_REFRESH_CONFIG">
             <column name="ID" type="uuid">
                 <constraints nullable="false"/>
@@ -111,16 +154,34 @@
     </changeSet>
     
     <changeSet id="U_TEST_DATA_TABLE_CATALOG(REFRESH_CONFIG_ID)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="TEST_DATA_TABLE_CATALOG(REFRESH_CONFIG_ID)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_TABLE_CATALOG" columnNames="REFRESH_CONFIG_ID"
                              constraintName="TEST_DATA_TABLE_CATALOG(REFRESH_CONFIG_ID)"/>
     </changeSet>
     
     <changeSet id="U_TEST_DATA_REFRESH_CONFIG(ID)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_REFRESH_CONFIG(ID)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_REFRESH_CONFIG" columnNames="ID"
                              constraintName="U_TEST_DATA_REFRESH_CONFIG(ID)"/>
     </changeSet>
     
     <changeSet id="TABLE_TEST_DATA_REFRESH_CONFIG(ID)-FK_TEST_DATA_TABLE_CATALOG(REFRESH_CONFIG_ID)" author="admin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.table_constraints
+                WHERE lower(constraint_type) = 'foreign key'
+                  AND lower(table_name) = 'test_data_refresh_config'
+                  AND constraint_name = 'TABLE_TEST_DATA_REFRESH_CONFIG(ID)-FK_TEST_DATA_TABLE_CATALOG(REFRESH_CONFIG_ID)';
+            </sqlCheck>
+        </preConditions>
         <addForeignKeyConstraint baseTableName="TEST_DATA_REFRESH_CONFIG"
                                  baseColumnNames="ID"
                                  referencedTableName="TEST_DATA_TABLE_CATALOG"
@@ -130,6 +191,11 @@
     </changeSet>
     
     <changeSet id="CREATE_TABLE_TEST_DATA_TABLE_IMPORT_INFO" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_TABLE_IMPORT_INFO"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_TABLE_IMPORT_INFO">
             <column name="TABLE_NAME" type="VARCHAR">
                 <constraints nullable="false"/>
@@ -141,11 +207,24 @@
     </changeSet>
     
     <changeSet id="U_TEST_DATA_TABLE_IMPORT_INFO(TABLE_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_TABLE_IMPORT_INFO(TABLE_NAME)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_TABLE_IMPORT_INFO" columnNames="TABLE_NAME"
                              constraintName="U_TEST_DATA_TABLE_IMPORT_INFO(TABLE_NAME)"/>
     </changeSet>
     
     <changeSet id="TEST_DATA_TABLE_IMPORT_INFO(TABLE_NAME)-FK_TEST_DATA_TABLE_CATALOG(TABLE_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.table_constraints
+                WHERE lower(constraint_type) = 'foreign key'
+                  AND lower(table_name) = 'test_data_table_import_info'
+                  AND constraint_name = 'TEST_DATA_TABLE_IMPORT_INFO(TABLE_NAME)-FK_TEST_DATA_TABLE_CATALOG(TABLE_NAME)';
+            </sqlCheck>
+        </preConditions>
         <addForeignKeyConstraint baseTableName="TEST_DATA_TABLE_IMPORT_INFO" baseColumnNames="TABLE_NAME"
                                  referencedTableName="TEST_DATA_TABLE_CATALOG"
                                  referencedColumnNames="TABLE_NAME"
@@ -154,6 +233,11 @@
     </changeSet>
     
     <changeSet id="CREATE_TABLE_TEST_DATA_TABLE_MONITORING" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_TABLE_MONITORING"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_TABLE_MONITORING">
             <column name="PROJECT_ID" type="uuid">
                 <constraints nullable="false" primaryKey="true"/>
@@ -174,11 +258,21 @@
     </changeSet>
     
     <changeSet id="U_TEST_DATA_TABLE_MONITORING(PROJECT_ID)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_TABLE_MONITORING(PROJECT_ID)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_TABLE_MONITORING" columnNames="PROJECT_ID"
                              constraintName="U_TEST_DATA_TABLE_MONITORING(PROJECT_ID)"/>
     </changeSet>
 
     <changeSet id="CREATE_TABLE_TEST_DATA_TABLE_USERS_MONITORING" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_TABLE_USERS_MONITORING"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_TABLE_USERS_MONITORING">
             <column name="PROJECT_ID" type="uuid">
                 <constraints nullable="false" primaryKey="true"/>
@@ -205,11 +299,21 @@
     </changeSet>
 
     <changeSet id="U_TEST_DATA_TABLE_USERS_MONITORING(PROJECT_ID)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_TABLE_USERS_MONITORING(PROJECT_ID)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_TABLE_USERS_MONITORING" columnNames="PROJECT_ID"
                              constraintName="U_TEST_DATA_TABLE_USERS_MONITORING(PROJECT_ID)"/>
     </changeSet>
 
     <changeSet id="CREATE_TABLE_TEST_DATA_CLEANUP_STATISTICS" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_CLEANUP_STATISTICS"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_CLEANUP_STATISTICS">
             <column autoIncrement="true" name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true"/>
@@ -230,13 +334,22 @@
     </changeSet>
     
     <changeSet id="U_TEST_DATA_CLEANUP_STATISTICS(TABLE_NAME, OCCUPIED_DATE)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_CLEANUP_STATISTICS(TABLE_NAME, OCCUPIED_DATE)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_CLEANUP_STATISTICS" columnNames="TABLE_NAME, OCCUPIED_DATE"
                              constraintName="U_TEST_DATA_CLEANUP_STATISTICS(TABLE_NAME, OCCUPIED_DATE)"/>
     </changeSet>
     
     
     <changeSet id="CREATE_TABLE_TEST_DATA_OCCUPY_STATISTIC" author="admin">
-        <comment>ATPII-23174</comment>
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_OCCUPY_STATISTIC"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_OCCUPY_STATISTIC">
             <column name="ROW_ID" type="uuid">
                 <constraints nullable="false" primaryKey="true"/>
@@ -264,6 +377,11 @@
     
     
     <changeSet id="CREATE_TABLE_TEST_DATA_FLAGS_TABLE" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="TEST_DATA_FLAGS_TABLE"/>
+            </not>
+        </preConditions>
         <createTable tableName="TEST_DATA_FLAGS_TABLE">
             <column name="TABLE_NAME" type="VARCHAR">
                 <constraints nullable="false"/>
@@ -275,11 +393,24 @@
     </changeSet>
 
     <changeSet id="U_TEST_DATA_FLAGS_TABLE(TABLE_NAME, UNOCCUPIED_VALIDATION)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <indexExists indexName="U_TEST_DATA_FLAGS_TABLE(TABLE_NAME, UNOCCUPIED_VALIDATION)"/>
+            </not>
+        </preConditions>
         <addUniqueConstraint tableName="TEST_DATA_FLAGS_TABLE" columnNames="TABLE_NAME, UNOCCUPIED_VALIDATION"
                              constraintName="U_TEST_DATA_FLAGS_TABLE(TABLE_NAME, UNOCCUPIED_VALIDATION)"/>
     </changeSet>
 
     <changeSet id="TEST_DATA_FLAGS_TABLE(TABLE_NAME)-FK_TEST_DATA_TABLE_CATALOG(TABLE_NAME)" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.table_constraints
+                WHERE lower(constraint_type) = 'foreign key'
+                  AND lower(table_name) = 'test_data_flags_table'
+                  AND constraint_name = 'TEST_DATA_FLAGS_TABLE(TABLE_NAME)-FK_TEST_DATA_TABLE_CATALOG(TABLE_NAME)';
+            </sqlCheck>
+        </preConditions>
         <addForeignKeyConstraint baseTableName="TEST_DATA_FLAGS_TABLE" baseColumnNames="TABLE_NAME"
                                  referencedTableName="TEST_DATA_TABLE_CATALOG"
                                  referencedColumnNames="TABLE_NAME"
@@ -288,12 +419,10 @@
     </changeSet>
 
     <changeSet id="PGCRYPTO_EXTENSION_INSTALLATION" author="admin">
-        <comment>ATPII-23452</comment>
-        <sqlFile path="migrationScripts/PGCRYPTO_EXTENSION_INSTALLATION_ATPII-23452.sql" splitStatements="false"/>
+        <sqlFile path="migrationScripts/PGCRYPTO_EXTENSION_INSTALLATION.sql" splitStatements="false"/>
     </changeSet>
 
     <changeSet id="CREATE_PROJECT_INFORMATION_TABLE" author="admin">
-        <comment>ATPII-31907</comment>
         <sqlFile path="migrationScripts/CREATE_PROJECT_INFORMATION.sql" splitStatements="false"/>
     </changeSet>
 
@@ -321,6 +450,11 @@
     </changeSet>
 
     <changeSet id="CREATE_DELETED_TABLE_HISTORY" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="DELETED_TABLES_HISTORY"/>
+            </not>
+        </preConditions>
         <createTable tableName="DELETED_TABLES_HISTORY">
             <column name="PROJECT_ID" type="uuid">
                 <constraints nullable="false"/>
@@ -343,7 +477,12 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="AVAILABLE_DATA_STATS" author="admin">
+    <changeSet id="CREATE_TABLE_COLUMN_VALUES" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="table_column_values"/>
+            </not>
+        </preConditions>
         <createTable tableName="table_column_values">
             <column name="table_name" type="VARCHAR(100)">
                 <constraints nullable="false" primaryKey="true"/>
@@ -351,6 +490,14 @@
             <column name="table_title" type="VARCHAR(100)"></column>
             <column name="values" type="VARCHAR"></column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="CREATE_TABLE_TEST_AVAILABLE_DATA_MONITORING" author="admin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="test_available_data_monitoring"/>
+            </not>
+        </preConditions>
         <createTable tableName="test_available_data_monitoring">
             <column name="environment_id" type="UUID">
                 <constraints primaryKey="true" nullable="false"></constraints>

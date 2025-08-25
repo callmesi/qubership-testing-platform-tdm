@@ -28,6 +28,8 @@ import org.springframework.http.ResponseEntity;
 
 public class HttpUtils {
 
+    private static final String TMP_DIR = "/tmp";
+
     /**
      * Building response entity containing file for download to user.
      *
@@ -38,11 +40,20 @@ public class HttpUtils {
      */
     public static ResponseEntity<InputStreamResource> buildFileResponseEntity(File file, String contentType)
             throws FileNotFoundException {
-        Path safePath = Paths.get(file.getName(), file.getName());
-        file = new File(safePath.toString());
+
+        if (file == null || !file.isFile()) {
+            throw new FileNotFoundException(file == null ? "null" : file.getPath());
+        }
+
+        Path baseDir = Paths.get(TMP_DIR).toAbsolutePath().normalize();
+        Path safePath = baseDir.resolve(file.getName()).normalize();
+        if (!safePath.startsWith(baseDir)) {
+            throw new SecurityException("Bad filename");
+        }
+        File safeFile = safePath.toFile();
         ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
                 .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Disposition")
-                .header("Content-Disposition", file.getName())
+                .header("Content-Disposition", safeFile.getName())
                 .header("Content-Type", contentType)
                 .body(new InputStreamResource(new FileInputStream(file)));
         DataUtils.deleteFile(file.toPath());

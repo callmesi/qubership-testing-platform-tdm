@@ -12,7 +12,6 @@
                 <columnExists tableName="TEST_DATA_TABLE_CATALOG" columnName="ENVIRONMENT_ID"/>
             </not>
         </preConditions>
-        <comment>TASUP-11354</comment>
         <addColumn tableName="TEST_DATA_TABLE_CATALOG">
             
             <column name="ENVIRONMENT_ID" type="uuid">
@@ -22,7 +21,11 @@
     </changeSet>
     
     <changeSet id="ADD_COLUMN_CLEANUP_TYPE_TO_TEST_DATA_CLEANUP_CONFIG" author="admin">
-        <comment>ATPII-20246</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_CLEANUP_CONFIG" columnName="TYPE"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_CLEANUP_CONFIG">
             <column name="TYPE" type="VARCHAR" defaultValue="SQL">
                 <constraints nullable="false"/>
@@ -31,7 +34,11 @@
     </changeSet>
     
     <changeSet id="ADD_COLUMN_SEARCH_DATE_TO_TEST_DATA_CLEANUP_CONFIG" author="admin">
-        <comment>ATPII-20246</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_CLEANUP_CONFIG" columnName="SEARCH_DATE"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_CLEANUP_CONFIG">
             <column name="SEARCH_DATE" type="VARCHAR">
                 <constraints nullable="true"/>
@@ -40,7 +47,11 @@
     </changeSet>
 
     <changeSet id="ADD_COLUMN_CREATED_WHEN_TO_TEST_DATA_OCCUPY_STATISTIC" author="admin">
-        <comment>ATPII-23742</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_OCCUPY_STATISTIC" columnName="CREATED_WHEN"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_OCCUPY_STATISTIC">
             <column name="CREATED_WHEN" type="DATE" defaultValue="2010-01-01">
                 <constraints nullable="true"/>
@@ -49,7 +60,11 @@
     </changeSet>
 
     <changeSet id="ADD_COLUMN_UPDATE_BY_QUERY_TO_TEST_DATA_TABLE_IMPORT_INFO" author="admin">
-        <comment>ATPII-36019</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_TABLE_IMPORT_INFO" columnName="UPDATE_BY_QUERY"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_TABLE_IMPORT_INFO">
             <column name="UPDATE_BY_QUERY" type="VARCHAR">
                 <constraints nullable="true"/>
@@ -58,12 +73,26 @@
     </changeSet>
 
     <changeSet id="DROP_CONSTRAIN_NOT_NULL_FOR_COLUMN_TABLE_QUERY_TO_TEST_DATA_TABLE_IMPORT_INFO" author="admin">
-        <comment>ATPII-36019</comment>
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'test_data_table_import_info'
+                      AND column_name = 'table_query'
+                      AND is_nullable = 'NO'
+                ) THEN 1 ELSE 0 END
+            </sqlCheck>
+        </preConditions>
         <dropNotNullConstraint tableName="TEST_DATA_TABLE_IMPORT_INFO" columnName="TABLE_QUERY"/>
     </changeSet>
 
     <changeSet id="ADD_COLUMN_QUERY_TIMEOUT_TO_TEST_DATA_TABLE_IMPORT_INFO" author="admin">
-        <comment>ATPII-35664</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_TABLE_IMPORT_INFO" columnName="QUERY_TIMEOUT"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_TABLE_IMPORT_INFO">
             <column name="QUERY_TIMEOUT" type="INTEGER">
                 <constraints nullable="true"/>
@@ -72,7 +101,11 @@
     </changeSet>
 
     <changeSet id="ADD_COLUMN_QUERY_TIMEOUT_TO_TEST_DATA_CLEANUP_CONFIG" author="admin">
-        <comment>ATPII-35664</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_CLEANUP_CONFIG" columnName="QUERY_TIMEOUT"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_CLEANUP_CONFIG">
             <column name="QUERY_TIMEOUT" type="INTEGER">
                 <constraints nullable="true"/>
@@ -81,7 +114,11 @@
     </changeSet>
 
     <changeSet id="ADD_COLUMN_ALL_ENV_TO_TEST_DATA_REFRESH_CONFIG" author="admin">
-        <comment>ATPII-35839</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_REFRESH_CONFIG" columnName="ALL_ENV"/>
+            </not>
+        </preConditions>
         <addColumn tableName="TEST_DATA_REFRESH_CONFIG">
             <column name="ALL_ENV" type="BOOLEAN" defaultValue="false">
                 <constraints nullable="false"/>
@@ -90,49 +127,74 @@
     </changeSet>
 
     <changeSet id="DELETE_COLUMN_NOT_NULL_CONSTRAINT_OCCUPIED_BY_IN_TEST_DATA_OCCUPY_STATISTIC" author="admin">
-        <comment>ATPII-23742</comment>
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'test_data_occupy_statistic'
+                      AND column_name = 'occupied_by'
+                      AND is_nullable = 'NO'
+                ) THEN 1 ELSE 0 END
+            </sqlCheck>
+        </preConditions>
         <dropNotNullConstraint columnName="OCCUPIED_BY"
                                tableName="TEST_DATA_OCCUPY_STATISTIC"/>
     </changeSet>
     
     <changeSet id="DELETE_COLUMN_NOT_NULL_CONSTRAINT_OCCUPIED_DATE_IN_TEST_DATA_OCCUPY_STATISTIC" author="admin">
-        <comment>ATPII-23742</comment>
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'test_data_occupy_statistic'
+                      AND column_name = 'occupied_date'
+                      AND is_nullable = 'NO'
+                ) THEN 1 ELSE 0 END
+            </sqlCheck>
+        </preConditions>
         <dropNotNullConstraint columnName="OCCUPIED_DATE"
                                tableName="TEST_DATA_OCCUPY_STATISTIC"/>
-    </changeSet>
-    
-    <changeSet id="DELETE_COLUMN_NOT_NULL_CONSTRAINT_OCCUPIED_DATE_IN_TEST_DATA_OCCUPY_STATISTIC" author="admin">
-        <comment>ATPII-23742</comment>
-        <dropNotNullConstraint columnName="OCCUPIED_DATE"
-                               tableName="TEST_DATA_OCCUPY_STATISTIC"/>
-    </changeSet>
-
-    <changeSet id="MIGRATE_DATA_FROM_TEST_DATA_CLEANUP_STATISTIC_TO_TEST_DATA_OCCUPY_STATISTIC" author="admin">
-        <comment>ATPII-23452</comment>
-        <sqlFile path="migrationScripts/MIGRATE_DATA_FROM_TEST_DATA_CLEANUP_STATISTIC_TO_TEST_DATA_OCCUPY_STATISTIC_ATPII-23452.sql" splitStatements="false"/>
     </changeSet>
 
     <changeSet id="DROP_TABLE_TEST_DATA_CLEANUP_STATISTIC" author="admin">
-        <comment>ATPII-23452</comment>
-        <sqlFile path="migrationScripts/DROP_TABLE_TEST_DATA_CLEANUP_STATISTIC_ATPII-23452.sql" splitStatements="false"/>
+        <sqlFile path="migrationScripts/DROP_TABLE_TEST_DATA_CLEANUP_STATISTIC.sql" splitStatements="false"/>
     </changeSet>
 
     <changeSet id="MIGRATE_DATA_TO_PROJECT_INFORMATION_TABLE" author="admin">
-        <comment>ATPII-23452</comment>
         <sqlFile path="migrationScripts/MIGRATE_DATA_TO_PROJECT_INFORMATION.sql" splitStatements="false"/>
     </changeSet>
 
     <changeSet id="TEST_DATA_TABLE_CATALOG(PROJECT_ID, SYSTEM_ID)" author="admin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="TEST_DATA_TABLE_CATALOG(PROJECT_ID, SYSTEM_ID)"/>
+            </not>
+        </preConditions>
         <createIndex tableName="TEST_DATA_TABLE_CATALOG" indexName="TEST_DATA_TABLE_CATALOG(PROJECT_ID, SYSTEM_ID)">
             <column name="PROJECT_ID"/>
             <column name="SYSTEM_ID"/>
         </createIndex>
     </changeSet>
 
-    <changeSet id="ADD_COLUMNS_FOR_DELETING_EXPIRED_TABLES" author="admin">
+    <changeSet id="ADD_COLUMN_LAST_USAGE_TO_TEST_DATA_TABLE_CATALOG" author="admin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="TEST_DATA_TABLE_CATALOG" columnName="LAST_USAGE"/>
+            </not>
+        </preConditions>
         <addColumn tableName="test_data_table_catalog">
             <column name="last_usage" type="DATE" defaultValueComputed="CURRENT_DATE"/>
         </addColumn>
+    </changeSet>
+
+    <changeSet id="ADD_COLUMN_EXPIRATION_MONTHS_TIMEOUT_TO_PROJECT_INFORMATION_TABLE" author="admin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="PROJECT_INFORMATION" columnName="EXPIRATION_MONTHS_TIMEOUT"/>
+            </not>
+        </preConditions>
         <addColumn tableName="project_information">
             <column name="expiration_months_timeout" type="INTEGER" defaultValue="1" />
         </addColumn>

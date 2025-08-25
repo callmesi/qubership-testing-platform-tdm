@@ -53,6 +53,8 @@ RUN unzip /tmp/qubership-atp-tdm-distribution-*.zip -d $HOME_EX/ && \
     find $HOME_EX -type f -name '*.sh' -exec chmod a+x {} + && \
     find $HOME_EX -type d -exec chmod 777 {} \;
 
+RUN find atp-tdm -mindepth 1 -maxdepth 1 -exec mv -t . {} + || true
+
 EXPOSE 8080 9000
 
 USER atp
