@@ -84,7 +84,10 @@ public class SqlTestDataCleaner implements TestDataCleaner {
         int index;
 
         log.info("Original cleanup query: {}", query);
-        // catch and replace column placeholders to build a PreparedStatement
+
+        /*
+            catch and replace column placeholders to build a PreparedStatement
+         */
         while (m.find()) {
             target = m.group();
             column = m.group(1);
@@ -96,27 +99,40 @@ public class SqlTestDataCleaner implements TestDataCleaner {
 
             query = query.replace(target, "?").trim().toUpperCase(Locale.ROOT);
 
-            Statement statement = CCJSqlParserUtil.parse(query);
-
-            if (statement instanceof Select) {
-                log.debug("This is a SELECT query.");
-            } else {
-                throw new SecurityException("Only SELECT statements are allowed!");
-            }
-            if (query.contains(";") || query.contains("--") || query.contains("/*")) {
-                throw new SecurityException("Potentially dangerous SQL syntax");
-            }
-
             String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, column);
             columns.add(sanitizedColumnName);
         }
 
+        /*
+            All column placeholders are replaced with '?' character, and columns list is populated.
+            Let's parse the resulting query.
+         */
+        Statement statement = CCJSqlParserUtil.parse(query);
+        if (statement instanceof Select) {
+            log.debug("This is a SELECT query.");
+        } else {
+            throw new SecurityException("Only SELECT statements are allowed!");
+        }
+        if (query.contains(";") || query.contains("--") || query.contains("/*")) {
+            throw new SecurityException("Potentially dangerous SQL syntax");
+        }
+
+        /*
+            Check rows existence in the testDataTable.
+            This checking could be the 1st in the method,
+            but... let's leave it here, to perform query parsing in any case.
+         */
         List<Map<String, Object>> rows = testDataTable.getData();
         if (rows.isEmpty()) {
             log.warn("Table body has no rows");
             return new ArrayList<>();
         }
 
+        /*
+            Prepare statement and execute it in the loop through all rows of testDataTable.
+            As a result, collect rows-to-be-deleted into rowsToBeDeleted list.
+            TODO: Should be re-analyzed, because it can be very resource-consuming in case wide target table.
+         */
         List<Map<String, Object>> rowsToBeDeleted = new ArrayList<>();
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             log.info("Cleanup query: {}", query);
