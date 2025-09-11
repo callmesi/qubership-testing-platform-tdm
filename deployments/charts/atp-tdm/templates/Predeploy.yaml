@@ -41,10 +41,10 @@ spec:
             limits:
               memory: '{{ .Values.PRE_POST_MEMORY_LIMIT }}'
               cpu: '{{ .Values.PRE_POST_CPU_LIMIT }}'
-        {{- if .Values.SECURITY_CONTEXT_ENABLED }}
+          {{- if .Values.SECURITY_CONTEXT_ENABLED }}
           securityContext:
-          {{- include "securityContext.container" . | nindent 12 }}
-        {{- end }}
+            {{- include "securityContext.container" . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: shared-data
               mountPath: /shared
@@ -59,32 +59,25 @@ spec:
             - secretRef:
                 name: {{ .Values.SERVICE_NAME }}-predeploy-secrets
           env:
-        {{- include "env.cloud" . | indent 8 }}
-        {{- if .Values.extraEnvs }}
-        {{- toYaml .Values.extraEnvs | nindent 8 }}
-        {{- end }}
-            - name: ENCRYPT
-              value: "{{ .Values.ENCRYPT }}"
-            - name: PAAS_PLATFORM
-              value: "{{ .Values.PAAS_PLATFORM }}"
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+          {{- include "env.cloud" . | indent 8 }}
+          {{- if .Values.extraEnvs }}
+          {{- toYaml .Values.extraEnvs | nindent 8 }}
+          {{- end }}
+          - name: ENCRYPT
+            value: "{{ .Values.ENCRYPT }}"
+          - name: PAAS_PLATFORM
+            value: "{{ .Values.PAAS_PLATFORM }}"
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
       initContainers:
         - name: init-container
           image: "{{ .Values.DOCKER_TAG }}"
-          resources:
-            requests:
-              memory: '{{ .Values.PRE_POST_MEMORY_REQUEST }}'
-              cpu: '{{ .Values.PRE_POST_CPU_REQUEST }}'
-            limits:
-              memory: '{{ .Values.PRE_POST_MEMORY_LIMIT }}'
-              cpu: '{{ .Values.PRE_POST_CPU_LIMIT }}'
-        {{- if .Values.SECURITY_CONTEXT_ENABLED }}
+          {{- if .Values.SECURITY_CONTEXT_ENABLED }}
           securityContext:
-          {{- include "securityContext.container" . | nindent 12 }}
-        {{- end }}
+            {{- include "securityContext.container" . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: shared-data
               mountPath: /shared
@@ -98,6 +91,5 @@ spec:
               find . -type f -regex '.*/lib/\(atp-crypt\|slf4j-api\|bcprov\|commons-lang\)-.*\.jar$' -exec cp -v "{}" /shared/lib/ \;
       serviceAccount: atp
       serviceAccountName: atp
-{{- end }}
-{{- end }}
-
+  {{- end }}
+  {{- end }}
