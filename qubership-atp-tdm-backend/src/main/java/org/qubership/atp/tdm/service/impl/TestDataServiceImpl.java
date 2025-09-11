@@ -207,7 +207,7 @@ public class TestDataServiceImpl implements TestDataService {
     @Override
     public TestDataTable getTestData(@Nonnull String tableName) {
         return testDataTableRepository.getTestData(false, tableName, null, null,
-                null, null);
+                null, null, false);
     }
 
     @Override
@@ -217,7 +217,7 @@ public class TestDataServiceImpl implements TestDataService {
                                      @Nonnull Boolean isOccupied) {
         testDataTableRepository.updateLastUsage(tableName);
         return testDataTableRepository.getTestData(isOccupied, tableName, offset, limit, filters,
-                testDataTableOrder);
+                testDataTableOrder, false);
     }
 
     @Override
@@ -380,23 +380,23 @@ public class TestDataServiceImpl implements TestDataService {
     @Override
     public DropResults deleteTestData(@Nonnull String tableName) {
         lockManager.executeWithLockWithUniqueLockKey("delete test data: " + tableName, () -> {
-        TestDataTableCatalog catalog = catalogRepository.findByTableName(tableName);
-        UUID configId = catalog.getRefreshConfigId();
-        if (Objects.nonNull(configId)) {
-            dataRefreshService.removeJob(configId);
-        }
-        try {
-            statisticsService.fillCreatedWhenStatistics(tableName, catalog);
-        } catch (BadSqlGrammarException e) {
-            log.error(e.getMessage(),e);
-        }
-        catalogRepository.deleteByTableName(tableName);
-        testDataTableRepository.dropTable(tableName);
-        cleanupService.removeUnused();
-        statisticsService.removeUnused();
-        testDataFlagsService.deleteRowByTableName(tableName);
-        columnService.deleteByTableName(tableName);
-        importInfoRepository.deleteByTableName(tableName);
+            TestDataTableCatalog catalog = catalogRepository.findByTableName(tableName);
+            UUID configId = catalog.getRefreshConfigId();
+            if (Objects.nonNull(configId)) {
+                dataRefreshService.removeJob(configId);
+            }
+            try {
+                statisticsService.fillCreatedWhenStatistics(tableName, catalog);
+            } catch (BadSqlGrammarException e) {
+                log.error(e.getMessage(),e);
+            }
+            catalogRepository.deleteByTableName(tableName);
+            testDataTableRepository.dropTable(tableName);
+            cleanupService.removeUnused();
+            statisticsService.removeUnused();
+            testDataFlagsService.deleteRowByTableName(tableName);
+            columnService.deleteByTableName(tableName);
+            importInfoRepository.deleteByTableName(tableName);
         });
         return new DropResults(tableName);
     }
@@ -674,7 +674,7 @@ public class TestDataServiceImpl implements TestDataService {
         TestDataTable table;
         try {
             table = testDataTableRepository.getTestData(occupied, catalog.getTableName(),
-                    null, null, filters, null);
+                    null, null, filters, null, false);
             testDataTableRepository.updateLastUsage(catalog.getTableName());
 
         } catch (Exception e) {
@@ -713,7 +713,7 @@ public class TestDataServiceImpl implements TestDataService {
         TestDataTable table;
         try {
             table = testDataTableRepository.getTestData(occupied, catalog.getTableName(),
-                    null, null, filters, null);
+                    null, null, filters, null, false);
         } catch (Exception e) {
             log.error(String.format("Error while retrieving test data from table %s", tableName), e);
             throw new TdmRetrieveTestDataException(tableName);
@@ -739,7 +739,7 @@ public class TestDataServiceImpl implements TestDataService {
             tdmMdcHelper.putConfigFields(catalog);
             try {
                 TestDataTable table = testDataTableRepository.getTestData(true, catalog.getTableName(),
-                        null, null, null, null);
+                        null, null, null, null, false);
                 if (table.getData().size() > 0) {
                     List<Map<String, Object>> rows = table.getData();
                     for (Map<String, Object> row : rows) {
