@@ -44,7 +44,6 @@ import org.qubership.atp.tdm.model.rest.requests.ReleaseRowRequest;
 import org.qubership.atp.tdm.model.rest.requests.UpdateRowRequest;
 import org.qubership.atp.tdm.model.table.TableDetails;
 import org.qubership.atp.tdm.model.table.TestDataTable;
-import org.qubership.atp.tdm.model.table.TestDataType;
 import org.qubership.atp.tdm.repo.AtpActionRepository;
 import org.qubership.atp.tdm.repo.CatalogRepository;
 import org.qubership.atp.tdm.repo.CleanupConfigRepository;
@@ -56,6 +55,7 @@ import org.qubership.atp.tdm.service.impl.CleanupServiceImpl;
 import org.qubership.atp.tdm.utils.TestDataTableConvertor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.qubership.atp.common.lock.LockManager;
@@ -108,12 +108,12 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
                                           @Nullable UUID environmentId, @Nonnull String tableTitle,
                                           List<Map<String, Object>> records, @Nonnull String resultLink) {
         ResponseMessage responseMessage = new ResponseMessage();
-        lockManager.executeWithLockWithUniqueLockKey("Insert. sys:" + systemId ,() -> {
-                TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
+        lockManager.executeWithLockWithUniqueLockKey("Insert. sys:" + systemId, () -> {
+            TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
             final String finalResultLink = resultLink + "/" + tableDetails.getTableName();
             if (tableDetails.isExists()) {
                 responseMessage.setContent("Test data table with specified name already exists. "
-                       + "Test data was inserted.");
+                        + "Test data was inserted.");
                 responseMessage.setLink(finalResultLink);
                 testDataTableRepository.insertRows(tableDetails.getTableName(), true, records, false);
                 testDataTableRepository.updateLastUsage(tableDetails.getTableName());
@@ -136,17 +136,17 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> occupyTestData(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                             @Nonnull String tableTitle, @Nonnull String occupiedBy,
-                                                             @Nonnull List<OccupyRowRequest> occupyRowRequests,
-                                                             @Nonnull String resultLink) {
+                                                @Nonnull String tableTitle, @Nonnull String occupiedBy,
+                                                @Nonnull List<OccupyRowRequest> occupyRowRequests,
+                                                @Nonnull String resultLink) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
         String finalResultLink = resultLink + "/" + tableDetails.getTableName();
         if (tableDetails.isExists()) {
-            lockManager.executeWithLockWithUniqueLockKey("occupyTestData: " + projectId + " " + tableTitle , () -> {
+            lockManager.executeWithLockWithUniqueLockKey("occupyTestData: " + projectId + " " + tableTitle, () -> {
                 for (OccupyRowRequest occupyRowRequest : occupyRowRequests) {
                     TestDataTable table = testDataTableRepository.getTestData(false, tableDetails.getTableName(),
-                            null, 1, occupyRowRequest.getFilters(), null);
+                            null, 1, occupyRowRequest.getFilters(), null, false);
                     Optional<Map<String, Object>> row = table.getData().stream().findFirst();
                     if (row.isPresent()) {
                         String nameColumnResponse = occupyRowRequest.getNameColumnResponse();
@@ -183,20 +183,21 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
     }
 
     @Override
+    @Transactional
     public List<ResponseMessage> occupyTestDataFullRow(@Nonnull UUID projectId,
-                                                                    @Nullable UUID systemId,
-                                                                    @Nonnull String tableTitle,
-                                                                    @Nonnull String occupiedBy,
-                                                                    List<OccupyFullRowRequest> occupyRowRequests,
-                                                                    @Nonnull String resultLink) {
+                                                       @Nullable UUID systemId,
+                                                       @Nonnull String tableTitle,
+                                                       @Nonnull String occupiedBy,
+                                                       List<OccupyFullRowRequest> occupyRowRequests,
+                                                       @Nonnull String resultLink) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
         String finalResultLink = resultLink + "/" + tableDetails.getTableName();
         if (tableDetails.isExists()) {
-            lockManager.executeWithLockWithUniqueLockKey("Occupy data in table: " + tableDetails.getTableName(),() -> {
+            lockManager.executeWithLockWithUniqueLockKey("Occupy data in table: " + tableDetails.getTableName(), () -> {
                 for (OccupyFullRowRequest occupyRowRequest : occupyRowRequests) {
                     TestDataTable table = testDataTableRepository.getTestData(false, tableDetails.getTableName(),
-                            null, 1, occupyRowRequest.getFilters(), null);
+                            null, 1, occupyRowRequest.getFilters(), null, true);
                     Optional<Map<String, Object>> row = table.getData().stream().findFirst();
                     if (row.isPresent()) {
                         UUID rowId = table.getData().stream()
@@ -251,14 +252,14 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> releaseTestData(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                              @Nonnull String tableTitle,
-                                                              @Nonnull List<ReleaseRowRequest> releaseRowRequests) {
+                                                 @Nonnull String tableTitle,
+                                                 @Nonnull List<ReleaseRowRequest> releaseRowRequests) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
         if (tableDetails.isExists()) {
             for (ReleaseRowRequest releaseRowRequest : releaseRowRequests) {
                 TestDataTable table = testDataTableRepository.getTestData(true, tableDetails.getTableName(),
-                        null, null, releaseRowRequest.getFilters(), null);
+                        null, null, releaseRowRequest.getFilters(), null, false);
                 List<Map<String, Object>> data = table.getData();
                 if (data.size() == 1) {
                     Map<String, Object> row = data.stream().findFirst().get();
@@ -299,39 +300,66 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> releaseFullTestData(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                                  @Nonnull String tableTitle) {
+                                                     @Nonnull String tableTitle) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
-        if (tableDetails.isExists()) {
-            Long rowCount = testDataTableRepository.getTestDataSize(tableDetails.getTableName(), TestDataType.OCCUPIED);
-            for (int offset = 0; offset < rowCount; offset += UPDATE_TEST_DATA_LIMIT) {
-                List<Map<String, Object>> testDataTable = testDataTableRepository.getTestData(true,
-                        tableDetails.getTableName(), offset, UPDATE_TEST_DATA_LIMIT, null, null)
-                        .getData();
-                List<UUID> rowIds =
-                        testDataTable.stream()
-                                .map(row ->
-                                        UUID.fromString(String.valueOf(row.get("ROW_ID"))))
-                                .collect(Collectors.toList());
-                testDataTableRepository.releaseTestData(tableDetails.getTableName(), rowIds);
-                testDataTableRepository.updateLastUsage(tableDetails.getTableName());
 
-            }
-            responseMessages.add(new ResponseMessage(ResponseType.SUCCESS,
-                    String.format("All occupied data in table with title \"%s\" released.", tableTitle)));
-        } else {
-            log.warn("Release test data. Table with title:  [{}] was not found.", tableTitle);
+        if (!tableDetails.isExists()) {
+            log.warn("Release test data. Table with title: [{}] was not found.", tableTitle);
             responseMessages.add(new ResponseMessage(ResponseType.ERROR,
                     String.format("Table with title \"%s\" was not found!", tableTitle)));
             return responseMessages;
         }
+
+        int offset = 0;
+        List<UUID> allRowIds = new ArrayList<>();
+        try {
+            while (true) {
+                List<Map<String, Object>> testDataTable = testDataTableRepository.getTestData(
+                                true, tableDetails.getTableName(), offset, UPDATE_TEST_DATA_LIMIT, null, null, false)
+                        .getData();
+
+                if (testDataTable.isEmpty()) {
+                    break;
+                }
+                List<UUID> rowIds = testDataTable.stream()
+                        .map(row -> UUID.fromString(String.valueOf(row.get("ROW_ID"))))
+                        .collect(Collectors.toList());
+                allRowIds.addAll(rowIds);
+
+                offset += UPDATE_TEST_DATA_LIMIT;
+            }
+
+            if (!allRowIds.isEmpty()) {
+                testDataTableRepository.releaseTestData(tableDetails.getTableName(), allRowIds);
+                testDataTableRepository.updateLastUsage(tableDetails.getTableName());
+            }
+
+            responseMessages.add(new ResponseMessage(ResponseType.SUCCESS,
+                    String.format("All occupied data in table with title \"%s\" released.", tableTitle)));
+
+        } catch (Exception e) {
+            logAndAddErrorResponse(tableTitle, e, responseMessages);
+        }
         return responseMessages;
+    }
+
+    private void logAndAddErrorResponse(String tableTitle, Exception e, List<ResponseMessage> responseMessages) {
+        log.error("Failed to release test data for table [{}]: {}", tableTitle, e.getMessage(), e);
+        responseMessages.add(new ResponseMessage(
+                ResponseType.ERROR,
+                String.format(
+                        "An error occurred while releasing data for table \"%s\": %s",
+                        tableTitle,
+                        e.getMessage()
+                )
+        ));
     }
 
     @Override
     public List<ResponseMessage> updateTestData(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                             @Nonnull String tableTitle,
-                                                             @Nonnull List<UpdateRowRequest> updateRowRequests) {
+                                                @Nonnull String tableTitle,
+                                                @Nonnull List<UpdateRowRequest> updateRowRequests) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails table = getTableDetails(projectId, systemId, tableTitle);
         if (table.isExists()) {
@@ -359,9 +387,9 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
     /**
      * Getting data from DB and creating ResponseMessage.
      *
-     * @param tableTitle Displayed title of table.
+     * @param tableTitle     Displayed title of table.
      * @param getRowRequests Getting data description.
-     * @param resultLink Link to TDM table.
+     * @param resultLink     Link to TDM table.
      * @return Response with multiple column values.
      */
     @Override
@@ -423,14 +451,14 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> getTestData(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                          @Nonnull String tableTitle,
-                                                          @Nonnull List<GetRowRequest> getRowRequests) {
+                                             @Nonnull String tableTitle,
+                                             @Nonnull List<GetRowRequest> getRowRequests) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
         if (tableDetails.isExists()) {
             for (GetRowRequest getRowRequest : getRowRequests) {
                 TestDataTable table = testDataTableRepository.getTestData(false, tableDetails.getTableName(),
-                        null, 1, getRowRequest.getFilters(), null);
+                        null, 1, getRowRequest.getFilters(), null, false);
                 testDataTableRepository.updateLastUsage(tableDetails.getTableName());
                 Optional<Map<String, Object>> row = table.getData().stream().findFirst();
                 if (row.isPresent()) {
@@ -462,8 +490,8 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> addInfoToRow(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                           @Nonnull String tableTitle,
-                                                           List<AddInfoToRowRequest> addInfoToRowRequests) {
+                                              @Nonnull String tableTitle,
+                                              List<AddInfoToRowRequest> addInfoToRowRequests) {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         TableDetails table = getTableDetails(projectId, systemId, tableTitle);
         if (table.isExists()) {
@@ -490,7 +518,7 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> refreshTables(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                            @Nonnull String tableTitle, @Nonnull String tdmUrl) {
+                                               @Nonnull String tableTitle, @Nonnull String tdmUrl) {
         List<TestDataTableCatalog> catalogList;
         if (Objects.nonNull(systemId)) {
             catalogList = Collections.singletonList(catalogRepository
@@ -521,7 +549,7 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
                 testDataTableRepository.updateLastUsage(tableCatalog.getTableName());
             } catch (Exception e) {
                 String message = "Failed to refresh table with title:" + tableCatalog.getTableTitle()
-                        + ". Root cause: " + e.getMessage() ;
+                        + ". Root cause: " + e.getMessage();
                 log.error(message, e);
                 responseMessages.add(new ResponseMessage(ResponseType.ERROR, message, resultLink));
             }
@@ -531,7 +559,7 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> truncateTable(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                            @Nonnull String tableTitle) {
+                                               @Nonnull String tableTitle) {
         TableDetails tableDetails = getTableDetails(projectId, systemId, tableTitle);
         ResponseMessage responseMessage = new ResponseMessage();
         lockManager.executeWithLockWithUniqueLockKey("truncate table: " + tableDetails.getTableName(), () -> {
@@ -560,7 +588,7 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
 
     @Override
     public List<ResponseMessage> runCleanupForTable(@Nonnull UUID projectId, @Nullable UUID systemId,
-                                                                 @Nonnull String tableTitle) {
+                                                    @Nonnull String tableTitle) {
         TestDataTableCatalog tableCatalog = catalogRepository.findByProjectIdAndSystemIdAndTableTitle(projectId,
                 systemId, tableTitle);
         String message;
@@ -587,12 +615,12 @@ public class AtpActionRepositoryImpl implements AtpActionRepository {
             log.info(message);
             return Collections.singletonList(new ResponseMessage(ResponseType.ERROR, message));
         }
-            message = String.format("For table \"%s\" with total records %s has been removed %s records.",
-                    cleanupResults.getTableName(),
-                    cleanupResults.getRecordsTotal(),
-                    cleanupResults.getRecordsRemoved());
-            log.info(message);
-            return Collections.singletonList(new ResponseMessage(ResponseType.SUCCESS, message));
+        message = String.format("For table \"%s\" with total records %s has been removed %s records.",
+                cleanupResults.getTableName(),
+                cleanupResults.getRecordsTotal(),
+                cleanupResults.getRecordsRemoved());
+        log.info(message);
+        return Collections.singletonList(new ResponseMessage(ResponseType.SUCCESS, message));
     }
 
     private String formResultLink(UUID projectId, UUID environmentId, UUID systemId, String tdmUrl) {

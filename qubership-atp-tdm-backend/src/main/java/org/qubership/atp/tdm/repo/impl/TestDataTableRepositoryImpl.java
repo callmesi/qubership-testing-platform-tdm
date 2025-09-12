@@ -56,9 +56,6 @@ import javax.annotation.Nullable;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.jetbrains.annotations.NotNull;
-import org.owasp.esapi.Encoder;
-import org.owasp.esapi.codecs.OracleCodec;
-import org.owasp.esapi.reference.DefaultEncoder;
 import org.qubership.atp.common.lock.LockManager;
 import org.qubership.atp.integration.configuration.mdc.MdcUtils;
 import org.qubership.atp.tdm.env.configurator.model.Server;
@@ -100,7 +97,6 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -148,9 +144,6 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
 
     @Value("${excel.import.directory}")
     private String excelImportDirectory;
-
-    private final Encoder esapiEncoder = DefaultEncoder.getInstance();
-    private final OracleCodec oracleCodec = new OracleCodec();
 
     /**
      * TestDataTableRepository Constructor.
@@ -296,11 +289,9 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
             List<String> existingColumns = getTableColumns(tableName);
             for (String queryColumnName : queryColumnNames) {
                 if (!existingColumns.contains(queryColumnName)) {
-                    String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-                    String sanitizedQueryColumnName = esapiEncoder.encodeForSQL(oracleCodec, queryColumnName);
                     log.debug("Table:[{}]. Alter new column:[{}]", tableName, queryColumnName);
-                    jdbcTemplate.execute(String.format(TestDataQueries.ADD_NEW_COLUMN_VARCHAR,
-                            sanitizedTableName, sanitizedQueryColumnName));
+                    jdbcTemplate.execute(format(TestDataQueries.ADD_NEW_COLUMN_VARCHAR,
+                            tableName, queryColumnName));
                 }
             }
             TestDataTable testDataTable;
@@ -311,7 +302,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
                 int countOfUpdatedRows = 0;
                 for (int offset = 0; offset < rows; offset += UPDATE_TEST_DATA_LIMIT) {
                     testDataTable = getTestData(tableName, TestDataType.AVAILABLE, offset, UPDATE_TEST_DATA_LIMIT,
-                            null, null);
+                            null, null, false);
                     for (Map<String, Object> row : testDataTable.getData()) {
                         String evaluatedQuery = query.replace(conditionColumnNamePattern,
                                 String.valueOf(row.get(conditionColumnName)));
@@ -360,15 +351,14 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
 
     private long updateTableRow(@Nonnull String tableName, @Nonnull List<String> columns,
                                 @Nonnull Map<String, Object> row) {
-        UpdateQuery updateQuery = new UpdateQuery(esapiEncoder.encodeForSQL(oracleCodec, tableName));
+        UpdateQuery updateQuery = new UpdateQuery(tableName);
         CustomSql customSql = new CustomSql("\"" + SystemColumns.ROW_ID.getName() + "\"");
         BinaryCondition binaryCondition = PgBinaryCondition.equalTo(customSql,
                 String.valueOf(row.get(SystemColumns.ROW_ID.getName())));
         updateQuery.addCondition(binaryCondition);
         for (String column : columns) {
             String value = TestDataUtils.escapeCharacters(String.valueOf(row.get(column)));
-            updateQuery.addCustomSetClause(new CustomSql("\"" + esapiEncoder.encodeForSQL(oracleCodec, column) + "\""),
-                    esapiEncoder.encodeForSQL(oracleCodec, value));
+            updateQuery.addCustomSetClause(new CustomSql("\"" + column + "\""), value);
         }
         return jdbcTemplate.update(updateQuery.toString());
     }
@@ -386,16 +376,16 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     @Override
     public TestDataTable getTestData(@Nonnull Boolean isOccupied, @Nonnull String tableName, @Nullable Integer offset,
                                      @Nullable Integer limit, @Nullable List<TestDataTableFilter> filters,
-                                     @Nullable TestDataTableOrder order) {
+                                     @Nullable TestDataTableOrder order, boolean isUpdate) {
         DataUtils.checkTableName(tableName);
         TestDataType testDataType = isOccupied ? TestDataType.OCCUPIED : TestDataType.AVAILABLE;
-        return getTestData(tableName, testDataType, offset, limit, filters, order);
+        return getTestData(tableName, testDataType, offset, limit, filters, order, isUpdate);
     }
 
     private TestDataTable getTestData(@Nonnull String tableName, @Nonnull TestDataType testDataType,
                                       @Nullable Integer offset, @Nullable Integer limit,
                                       @Nullable List<TestDataTableFilter> filters,
-                                      @Nullable TestDataTableOrder testDataTableOrder) {
+                                      @Nullable TestDataTableOrder testDataTableOrder, boolean isUpdate) {
         QueryInfo.Builder queryInfoBuilder = QueryInfo.newBuilder(tableName, testDataType);
         if (Objects.nonNull(offset)) {
             queryInfoBuilder.setOffset(offset);
@@ -411,20 +401,21 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
         }
         QueryInfo queryInfo = queryInfoBuilder.build();
         TestDataTable table;
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-
         try {
             log.debug("Start DB query.");
-            table = jdbcTemplate.query(queryInfo.getQuery().toString(),
-                    extractorProvider.simpleExtractor(sanitizedTableName, queryInfo.getCountQuery().toString(),
-                            testDataType,
+            String sqlQuery = queryInfo.getQuery().toString();
+            if (isUpdate) {
+                sqlQuery += " FOR UPDATE SKIP LOCKED";
+            }
+            table = jdbcTemplate.query(sqlQuery,
+                    extractorProvider.simpleExtractor(tableName, queryInfo.getCountQuery().toString(), testDataType,
                             testDataTableOrder));
             log.debug("Stop DB query.");
         } catch (Exception e) {
             log.error(TdmDbExecuteQueryException.DEFAULT_MESSAGE, e);
             throw new TdmDbExecuteQueryException(e.getMessage());
         }
-        Optional<TestDataTableImportInfo> testDataTableInfo = importInfoRepository.findById(sanitizedTableName);
+        Optional<TestDataTableImportInfo> testDataTableInfo = importInfoRepository.findById(tableName);
         assert table != null;
         testDataTableInfo.ifPresent(dataTableInfo -> {
             table.setQuery(dataTableInfo.getTableQuery());
@@ -445,9 +436,8 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
             queryInfoBuilder.setFilters(filters);
         }
         QueryInfo queryInfo = queryInfoBuilder.build();
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
         return jdbcTemplate.query(queryInfo.getQuery().toString(),
-                extractorProvider.simpleExtractor(sanitizedTableName, queryInfo.getCountQuery().toString(),
+                extractorProvider.simpleExtractor(tableName, queryInfo.getCountQuery().toString(),
                         TestDataType.ALL, null));
     }
 
@@ -479,7 +469,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     @Override
     public TestDataTable getFullTestData(@Nonnull String tableName) {
         DataUtils.checkTableName(tableName);
-        return getTestData(tableName, TestDataType.ALL, null, null, null, null);
+        return getTestData(tableName, TestDataType.ALL, null, null, null, null, false);
     }
 
     @Override
@@ -520,11 +510,8 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
         }
         TestDataTableCreator tableCreator = new TestDataTableCreator(tableName);
         Map<String, DbColumn> dbColumns = new HashMap<>();
-        List<String> sanitizedColumns = new ArrayList<>();
         for (String columnName : columns) {
-            String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, columnName);
-            sanitizedColumns.add(sanitizedColumnName);
-            dbColumns.put(sanitizedColumnName, tableCreator.buildColumn(sanitizedColumnName));
+            dbColumns.put(columnName, tableCreator.buildColumn(columnName));
         }
         if (!exists) {
             log.info("Creating test data table with the name: [{}]", tableName);
@@ -538,8 +525,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
         if (!skipSchemaUpdate) {
             log.info("Saving test data. Processing rows. Table name: [{}]", tableName);
         }
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        jdbcTemplate.batchUpdate(TestDataUtils.generateInsertTemplate(sanitizedTableName, sanitizedColumns,
+        jdbcTemplate.batchUpdate(TestDataUtils.generateInsertTemplate(tableName, new ArrayList<>(columns),
                         systemColumnsExists),
                 rows,
                 Math.min(rows.size(), 100),
@@ -573,16 +559,12 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     public String occupyTestData(@Nonnull String tableName, @Nonnull String occupiedBy, @Nonnull List<UUID> rows) {
         DataUtils.checkColumnName(tableName);
         String date = DateFormatter.DB_DATE_FORMATTER.format(new Timestamp(new Date().getTime()));
-
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("ids", rows);
-        parameters.addValue("user", esapiEncoder.encodeForSQL(oracleCodec, occupiedBy));
-
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-
+        parameters.addValue("user", occupiedBy);
         try {
             int updatedRowsCount = namedParameterJdbcTemplate.update(
-                    format(TestDataQueries.OCCUPY_TEST_DATA, sanitizedTableName, date), parameters);
+                    format(TestDataQueries.OCCUPY_TEST_DATA, tableName, date), parameters);
             if (updatedRowsCount == 0) {
                 throw new TdmTestDataOccupiedException();
             }
@@ -600,9 +582,8 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
         DataUtils.checkColumnName(tableName);
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("ids", rows);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        namedParameterJdbcTemplate.update(format(TestDataQueries.RELEASE_TEST_DATA, sanitizedTableName), parameters);
-        updateLastUsage(sanitizedTableName);
+        namedParameterJdbcTemplate.update(format(TestDataQueries.RELEASE_TEST_DATA, tableName), parameters);
+        updateLastUsage(tableName);
     }
 
     @Override
@@ -648,39 +629,34 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         DataUtils.checkColumnName(tableName);
         parameters.addValue("ids", rows);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        namedParameterJdbcTemplate.update(format(TestDataQueries.DELETE_ROWS_BY_ID, sanitizedTableName), parameters);
+        namedParameterJdbcTemplate.update(format(TestDataQueries.DELETE_ROWS_BY_ID, tableName), parameters);
     }
 
     @Override
     public void deleteAllRows(@Nonnull String tableName) {
         log.info("Deleting all rows from table with name: [{}]", tableName);
         DataUtils.checkColumnName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        jdbcTemplate.execute(format(TestDataQueries.DELETE_ALL_TABLE_ROWS, sanitizedTableName));
+        jdbcTemplate.execute(format(TestDataQueries.DELETE_ALL_TABLE_ROWS, tableName));
     }
 
     @Override
     public int deleteRowsByDate(@Nonnull String tableName, @Nonnull LocalDate date) {
         log.info("Deleting rows from table with name [{}] by date", tableName);
         DataUtils.checkColumnName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        return jdbcTemplate.update(format(TestDataQueries.DELETE_ROWS_BY_DATE, sanitizedTableName, date));
+        return jdbcTemplate.update(format(TestDataQueries.DELETE_ROWS_BY_DATE, tableName, date));
     }
 
     @Override
     public int getCountRows(@NotNull String tableName) {
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        return jdbcTemplate.queryForObject(format(TestDataQueries.GET_COUNT_ROWS, sanitizedTableName), Integer.class);
+        return jdbcTemplate.queryForObject(format(TestDataQueries.GET_COUNT_ROWS, tableName), Integer.class);
     }
 
     @Override
     public void deleteUnoccupiedRows(@Nonnull String tableName) {
         log.info("Deleting unoccupied rows from table with name: [{}]", tableName);
         DataUtils.checkColumnName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        jdbcTemplate.execute(format(TestDataQueries.DELETE_UNOCCUPIED_ROWS, sanitizedTableName));
+        jdbcTemplate.execute(format(TestDataQueries.DELETE_UNOCCUPIED_ROWS, tableName));
     }
 
     @Override
@@ -696,32 +672,28 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     public String evaluateQuery(@Nonnull String tableName, @Nonnull String query) {
         DataUtils.checkTableName(tableName);
         DataUtils.checkQuery(query);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        return queryEvaluator.evaluate(sanitizedTableName, query);
+        return queryEvaluator.evaluate(tableName, query);
     }
 
     @Override
     public void dropTable(@Nonnull String tableName) {
         log.info("Dropping a table with name: [{}]", tableName);
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        jdbcTemplate.execute(format(TestDataQueries.DROP_TABLE, sanitizedTableName));
+        jdbcTemplate.execute(format(TestDataQueries.DROP_TABLE, tableName));
     }
 
     @Override
     public void truncateTable(@Nonnull String tableName) {
         log.info("Truncating a table with name: [{}]", tableName);
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        jdbcTemplate.execute(format(TestDataQueries.TRUNCATE_TABLE, sanitizedTableName));
+        jdbcTemplate.execute(format(TestDataQueries.TRUNCATE_TABLE, tableName));
     }
 
     @Override
     public void alterOccupiedByColumn(List<String> tableNames) {
         for (String tableName : tableNames) {
             DataUtils.checkTableName(tableName);
-            String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-            alterMissingColumns(sanitizedTableName, Collections.singletonList("OCCUPIED_BY"),
+            alterMissingColumns(tableName, Collections.singletonList("OCCUPIED_BY"),
                     TestDataQueries.ADD_NEW_COLUMN_VARCHAR);
         }
     }
@@ -731,19 +703,15 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
                                                 Boolean occupied) {
         DataUtils.checkColumnName(columnName);
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, columnName);
-
         if (occupied == null) {
             log.debug("GET_COLUMN_DISTINCT_VALUES");
             return new ColumnValues(jdbcTemplate.queryForList(
-                    format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES, sanitizedColumnName, sanitizedTableName),
-                    String.class));
+                    format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES, columnName, tableName), String.class));
         } else {
             log.debug("GET_COLUMN_DISTINCT_VALUES_BY_OCCUPIED");
             return new ColumnValues(jdbcTemplate.queryForList(
                     format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES_BY_OCCUPIED,
-                            sanitizedColumnName, sanitizedTableName), String.class, occupied));
+                            columnName, tableName), String.class, occupied));
         }
     }
 
@@ -752,13 +720,10 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
                                             String columnType, Boolean occupied) {
         DataUtils.checkColumnName(columnName);
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, columnName);
         try {
             if (columnType.equals("varchar")) {
                 Integer columnValueSize = jdbcTemplate.queryForObject(
-                        format(TestDataQueries.GET_COLUMN_CHARACTER_LENGTH, sanitizedColumnName, sanitizedTableName),
-                        Integer.class);
+                        format(TestDataQueries.GET_COLUMN_CHARACTER_LENGTH, columnName, tableName), Integer.class);
                 if (columnValueSize != null && columnValueSize > 50000) {
                     return 50;
                 }
@@ -770,12 +735,10 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
         if (occupied == null) {
             log.debug("GET_COLUMN_DISTINCT_VALUES");
             return jdbcTemplate.queryForObject(
-                    format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES_COUNT, sanitizedColumnName, sanitizedTableName),
-                    Integer.class);
+                    format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES_COUNT, columnName, tableName), Integer.class);
         } else {
             return jdbcTemplate.queryForObject(
-                    format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES_BY_OCCUPIED_COUNT, sanitizedColumnName,
-                            sanitizedTableName),
+                    format(TestDataQueries.GET_COLUMN_DISTINCT_VALUES_BY_OCCUPIED_COUNT, columnName, tableName),
                     Integer.class, occupied);
         }
     }
@@ -800,7 +763,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
                         dateTo.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))), false);
         filters.add(filterFrom);
         filters.add(filterTo);
-        return getTestData(tableName, TestDataType.ALL, null, null, filters, null);
+        return getTestData(tableName, TestDataType.ALL, null, null, filters, null, false);
     }
 
     @Override
@@ -823,8 +786,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     @Override
     public Long getTestDataSize(@Nonnull String tableName, @Nonnull TestDataType dataType) {
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        QueryInfo.Builder queryInfoBuilder = QueryInfo.newBuilder(sanitizedTableName, dataType);
+        QueryInfo.Builder queryInfoBuilder = QueryInfo.newBuilder(tableName, dataType);
         try {
             return jdbcTemplate.queryForObject(queryInfoBuilder.build().getCountQuery().toString(), Long.class);
         } catch (Exception e) {
@@ -865,10 +827,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
                 recreateTable(tableName, columns);
             } else {
                 columnsBuff.forEach(columnName -> {
-                    String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-                    String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, columnName);
-                    String preparedQuery = String.format(query, sanitizedTableName, sanitizedColumnName);
-                    jdbcTemplate.execute(preparedQuery);
+                    jdbcTemplate.execute(format(query, tableName, columnName));
                 });
             }
             log.info("Missing columns successfully added.");
@@ -882,8 +841,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
      * @return list of additional table columns
      */
     private List<String> getTableColumns(@Nonnull String tableName) {
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        return jdbcTemplate.queryForList(TestDataQueries.DATA_TABLE_COLUMNS, String.class, sanitizedTableName);
+        return jdbcTemplate.queryForList(TestDataQueries.DATA_TABLE_COLUMNS, String.class, tableName);
     }
 
     private void recreateTable(@Nonnull String tableName, @Nonnull List<String> columns) {
@@ -946,10 +904,8 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     public String getFirstRecordFromDataStorageTable(@Nonnull String tableName, @Nonnull String columnName) {
         DataUtils.checkColumnName(columnName);
         DataUtils.checkTableName(tableName);
-        String sanitizedTableName = esapiEncoder.encodeForSQL(oracleCodec, tableName);
-        String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, columnName);
         return jdbcTemplate.queryForObject(format(TestDataQueries.GET_FIRST_RECORD_FROM_DATA_STORAGE_TABLE,
-                sanitizedColumnName, sanitizedTableName), String.class);
+                columnName, tableName), String.class);
     }
 
     @Override
@@ -973,9 +929,8 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     public List<String> getTablesBySystemIdAndExistingColumn(@Nonnull UUID systemId, @Nonnull UUID environmentId,
                                                              @Nonnull String columnName) {
         DataUtils.checkColumnName(columnName);
-        String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, columnName);
         return jdbcTemplate.queryForList(TestDataQueries.TABLES_BY_SYSTEM_AND_COLUMN,
-                String.class, systemId, environmentId, sanitizedColumnName);
+                String.class, systemId, environmentId, columnName);
     }
 
     @Override

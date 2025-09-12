@@ -34,6 +34,13 @@ spec:
       containers:
       - name: pre-deploy-job
         image: "{{ .Values.HELPER_IMAGE }}"
+        resources:
+          requests:
+            memory: '{{ .Values.PRE_POST_MEMORY_REQUEST }}'
+            cpu: '{{ .Values.PRE_POST_CPU_REQUEST }}'
+          limits:
+            memory: '{{ .Values.PRE_POST_MEMORY_LIMIT }}'
+            cpu: '{{ .Values.PRE_POST_CPU_LIMIT }}'
         {{- if .Values.SECURITY_CONTEXT_ENABLED }}
         securityContext:
           {{- include "securityContext.container" . | nindent 12 }}
@@ -67,6 +74,13 @@ spec:
       initContainers:
       - name: init-container
         image: "{{ .Values.DOCKER_TAG }}"
+        resources:
+          requests:
+            memory: '{{ .Values.PRE_POST_MEMORY_REQUEST }}'
+            cpu: '{{ .Values.PRE_POST_CPU_REQUEST }}'
+          limits:
+            memory: '{{ .Values.PRE_POST_MEMORY_LIMIT }}'
+            cpu: '{{ .Values.PRE_POST_CPU_LIMIT }}'
         {{- if .Values.SECURITY_CONTEXT_ENABLED }}
         securityContext:
           {{- include "securityContext.container" . | nindent 12 }}

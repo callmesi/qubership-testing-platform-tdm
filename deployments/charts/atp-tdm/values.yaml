@@ -104,6 +104,10 @@ MAX_RAM: "1024m"
 MEMORY_LIMIT: "1024Mi"
 # Memory request
 MEMORY_REQUEST: "512Mi"
+PRE_POST_CPU_REQUEST: "0.05"
+PRE_POST_CPU_LIMIT: "0.5"
+PRE_POST_MEMORY_REQUEST: "50Mi"
+PRE_POST_MEMORY_LIMIT: "500Mi"
 # OpenShift project.
 # Variable 'OPENSHIFT_PROJECT' was never used
 # Host of db

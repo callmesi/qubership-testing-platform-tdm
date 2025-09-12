@@ -49,7 +49,7 @@ public interface TestDataTableRepository {
 
     TestDataTable getTestData(@Nonnull Boolean isOccupied, @Nonnull String tableName, @Nullable Integer offset,
                               @Nullable Integer limit, @Nullable List<TestDataTableFilter> filters,
-                              @Nullable TestDataTableOrder order);
+                              @Nullable TestDataTableOrder order, boolean isUpdate);
 
     TestDataTable getTestData(@Nonnull String tableName, @Nonnull List<String> columnNames,
                               @Nullable List<TestDataTableFilter> filters);
@@ -118,7 +118,7 @@ public interface TestDataTableRepository {
 
     String getFirstRecordFromDataStorageTable(@Nonnull String tableName, @Nonnull String columnName);
 
-     void updateLastUsage(@Nonnull String tableName);
+    void updateLastUsage(@Nonnull String tableName);
 
     List<String> getTablesBySystemIdAndExistingColumn(@Nonnull UUID systemId, @Nonnull UUID environmentId,
                                                       @Nonnull String columnName);
