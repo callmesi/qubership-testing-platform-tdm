@@ -161,7 +161,8 @@ public class SqlTestDataCleaner implements TestDataCleaner {
                 throw new IllegalArgumentException("Column '" + column + "' doesn't exist");
             }
 
-            query = query.replace(target, "?").trim().toUpperCase(Locale.ROOT);
+            query = query.replace(target, "?").trim();
+            log.debug("Formatted cleanup query: {}", query);
 
             String sanitizedColumnName = esapiEncoder.encodeForSQL(oracleCodec, column);
             columns.add(sanitizedColumnName);
@@ -170,7 +171,7 @@ public class SqlTestDataCleaner implements TestDataCleaner {
     }
 
     public boolean parseQuery() {
-        Statement statement = CCJSqlParserUtil.parse(query);
+        Statement statement = CCJSqlParserUtil.parse(query.trim().toUpperCase(Locale.ROOT));
         if (statement instanceof Select) {
             log.debug("This is a SELECT query.");
         } else {
