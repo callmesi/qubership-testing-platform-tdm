@@ -4,7 +4,7 @@
     <parent>
         <artifactId>qubership-atp-tdm-parent-db</artifactId>
         <groupId>org.qubership.atp.tdm</groupId>
-        <version>1.2.92-SNAPSHOT</version>
+        <version>1.2.93-SNAPSHOT</version>
         <relativePath>../parent/qubership-atp-tdm-parent-db/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
