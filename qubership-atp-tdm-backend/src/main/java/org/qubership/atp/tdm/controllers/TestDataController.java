@@ -56,7 +56,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -144,7 +143,7 @@ public class TestDataController /* implements TestDataControllerApi */ {
                                                            @RequestParam List<UUID> environmentsIds,
                                                            @RequestParam String systemName,
                                                            @RequestParam String tableTitle,
-                                                           @RequestPart String query,
+                                                           @RequestParam String query,
                                                            @RequestParam Integer queryTimeout) {
         metricService.incrementInsertAction(projectId);
         return testDataService.importSqlTestData(projectId, environmentsIds, systemName,
