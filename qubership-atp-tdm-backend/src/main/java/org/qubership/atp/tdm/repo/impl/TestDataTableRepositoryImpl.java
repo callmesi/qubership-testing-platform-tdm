@@ -125,6 +125,7 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
     private static final Pattern INDEX_COLUMN_PATTERN = Pattern.compile("\\$\\{'([^']+)'}");
     private static final Integer UPDATE_TEST_DATA_LIMIT = 100;
     private static final String EXCEL_IMPORT_FILE_MASK = "ExcelForImport_%s.xlsx";
+    private static final Integer COLUMN_SIZE_LIMIT_FOR_LIST_TYPE = 44;
 
     private final JdbcTemplate jdbcTemplate;
     private final PlatformTransactionManager transactionManager;
@@ -724,8 +725,8 @@ public class TestDataTableRepositoryImpl implements TestDataTableRepository {
             if (columnType.equals("varchar")) {
                 Integer columnValueSize = jdbcTemplate.queryForObject(
                         format(TestDataQueries.GET_COLUMN_CHARACTER_LENGTH, columnName, tableName), Integer.class);
-                if (columnValueSize != null && columnValueSize > 50000) {
-                    return 50;
+                if (columnValueSize != null && columnValueSize > COLUMN_SIZE_LIMIT_FOR_LIST_TYPE) {
+                    return COLUMN_SIZE_LIMIT_FOR_LIST_TYPE;
                 }
             }
         } catch (Exception e) {
